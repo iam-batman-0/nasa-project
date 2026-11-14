@@ -11,11 +11,7 @@
 ## 📽️ Project Demonstration (NASA Space Apps Global Award Eligible)
 - **7-Slide Presentation (Direct Public Link):**  
   👉 **[https://github.com/iam-batman-0/nasa-project/blob/main/demo/SLIDES.md](https://github.com/iam-batman-0/nasa-project/blob/main/demo/SLIDES.md)**  
-  *(Compliant 7-slide deck covering Problem, 5 Hazards, Edge Architecture, Real-Time HUD, Self-Assessments, Countermeasures & Impact)*
-- **Interactive In-Browser Slide Deck (with Print-to-PDF):**  
-  👉 **[http://localhost:8000/slides](http://localhost:8000/slides)**
-- **30-Second Video Demonstration Script & Storyboard:**  
-  👉 **[https://github.com/iam-batman-0/nasa-project/blob/main/demo/30_SECOND_VIDEO_SCRIPT.md](https://github.com/iam-batman-0/nasa-project/blob/main/demo/30_SECOND_VIDEO_SCRIPT.md)**
+  *(Compliant 7-slide presentation covering Problem, 5 Hazards, Edge Architecture, Real-Time HUD, Self-Assessments, Countermeasures & Impact)*
 
 ---
 
@@ -95,10 +91,7 @@ python -m venv .venv
 ```
 
 ### 4. Open Flight Deck in Your Browser
-Navigate to:
-```
-http://localhost:8000
-```
+Open the application on port `8000` (e.g., `http://127.0.0.1:8000` or via your machine's network IP).
 
 ---
 
