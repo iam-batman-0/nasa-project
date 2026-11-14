@@ -181,3 +181,4 @@ function showPVTNotice(msg) {
   arena.appendChild(banner);
   setTimeout(() => banner.remove(), 1200);
 }
+

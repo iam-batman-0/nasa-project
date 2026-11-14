@@ -22,3 +22,4 @@ class CountermeasurePlan(BaseModel):
     summary: str
     action_items: List[ProtocolActionItem]
     re_evaluation_in_hours: int = 12
+

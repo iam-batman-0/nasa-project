@@ -34,3 +34,4 @@ class TelemetrySnapshot(BaseModel):
     crew_vitals: Dict[str, PhysiologicalVitals]
     environment: EnvironmentalTelemetry
     system_status: str = "AUTONOMOUS_OPERATIONAL"
+

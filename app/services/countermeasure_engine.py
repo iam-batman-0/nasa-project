@@ -184,3 +184,4 @@ class CountermeasureEngine:
             action_items=actions,
             re_evaluation_in_hours=8 if evaluation["status"] == "CRITICAL" else 12
         )
+

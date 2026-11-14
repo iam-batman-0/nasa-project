@@ -54,7 +54,7 @@ def startup_event():
 # --- WEB DASHBOARD ROUTE ---
 @app.get("/")
 def get_dashboard(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="index.html")
 
 # --- CREW ROSTER ENDPOINTS ---
 @app.get("/api/crew", response_model=List[AstronautProfile])
@@ -243,3 +243,4 @@ def set_simulator_scenario(payload: ScenarioPayload):
         "active_scenario": payload.scenario,
         "message": f"Mission event {payload.scenario} injected into telemetry bus."
     }
+

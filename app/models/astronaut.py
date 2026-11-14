@@ -17,3 +17,4 @@ class AstronautProfile(BaseModel):
     current_bmd_t_score: float = 0.2
     active_countermeasures_count: int = 3
     avatar_url: Optional[str] = None
+

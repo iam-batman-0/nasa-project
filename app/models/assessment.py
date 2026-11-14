@@ -43,3 +43,4 @@ class BiomarkerLog(BaseModel):
     deep_sleep_percentage: float = 18.0
     sleep_quality_score: int = Field(default=84, ge=0, le=100)
     notes: Optional[str] = None
+

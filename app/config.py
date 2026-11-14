@@ -42,3 +42,4 @@ class MissionConfig(BaseModel):
     EXERCISE_ARED_MIN_HOURS_PER_DAY: float = 1.5
 
 config = MissionConfig()
+

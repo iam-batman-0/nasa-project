@@ -127,3 +127,4 @@ function submitSANSExam() {
 window.addEventListener('DOMContentLoaded', () => {
   initAmslerGrid();
 });
+

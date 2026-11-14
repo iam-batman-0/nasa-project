@@ -137,3 +137,4 @@ class TelemetrySimulator:
 
 # Global simulator instance
 simulator = TelemetrySimulator()
+
