@@ -10,7 +10,7 @@
 
 ## 📽️ Project Demonstration (NASA Space Apps Global Award Eligible)
 - **7-Slide Presentation (Direct Public Link):**  
-  👉 **[https://github.com/iam-batman-0/nasa-project/blob/main/demo/SLIDES.md](https://github.com/iam-batman-0/nasa-project/blob/main/demo/SLIDES.md)**  
+  👉 **[SLIDES]([https://github.com/iam-batman-0/nasa-project/blob/main/demo/SLIDES.md](https://github.com/iam-batman-0/nasa-project/blob/main/demo/BioSentinel%20(Aegis-Astro).pptx))**  
   *(Compliant 7-slide presentation covering Problem, 5 Hazards, Edge Architecture, Real-Time HUD, Self-Assessments, Countermeasures & Impact)*
 
 ---
