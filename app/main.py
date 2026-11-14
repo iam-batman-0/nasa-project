@@ -56,6 +56,10 @@ def startup_event():
 def get_dashboard(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
 
+@app.get("/slides")
+def get_slides(request: Request):
+    return templates.TemplateResponse(request=request, name="slides.html")
+
 # --- CREW ROSTER ENDPOINTS ---
 @app.get("/api/crew", response_model=List[AstronautProfile])
 def get_crew():

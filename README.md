@@ -8,6 +8,17 @@
 
 ---
 
+## 📽️ Project Demonstration (NASA Space Apps Global Award Eligible)
+- **7-Slide Presentation (Direct Public Link):**  
+  👉 **[https://github.com/iam-batman-0/nasa-project/blob/main/demo/SLIDES.md](https://github.com/iam-batman-0/nasa-project/blob/main/demo/SLIDES.md)**  
+  *(Compliant 7-slide deck covering Problem, 5 Hazards, Edge Architecture, Real-Time HUD, Self-Assessments, Countermeasures & Impact)*
+- **Interactive In-Browser Slide Deck (with Print-to-PDF):**  
+  👉 **[http://localhost:8000/slides](http://localhost:8000/slides)**
+- **30-Second Video Demonstration Script & Storyboard:**  
+  👉 **[https://github.com/iam-batman-0/nasa-project/blob/main/demo/30_SECOND_VIDEO_SCRIPT.md](https://github.com/iam-batman-0/nasa-project/blob/main/demo/30_SECOND_VIDEO_SCRIPT.md)**
+
+---
+
 ## 🚀 The Challenge
 On long-duration exploration missions (e.g., Artemis deep-space gateways, Moon-to-Mars transits with 3- to 22-minute one-way communication delays to Earth), astronauts cannot rely on ground-based flight surgeons. The **5 Hazards of Human Spaceflight** impose compounding physiological damage:
 1. **Space Radiation**: High-energy Galactic Cosmic Rays (GCR) and acute Solar Particle Events (SPE).
