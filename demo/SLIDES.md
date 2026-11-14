@@ -71,3 +71,4 @@
   - Remote telemedicine in Arctic/Antarctic research stations, submarine crews, and isolated rural clinics.
   - Preventative monitoring of osteoporosis, bedrest deconditioning, and shift-work circadian fatigue.
 - **Open Source:** Full code, data models, and simulator available at [https://github.com/iam-batman-0/nasa-project](https://github.com/iam-batman-0/nasa-project).
+
