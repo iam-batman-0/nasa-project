@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NASA BioSentinel | Autonomous Crew Health System</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            space: {
+              950: '#060913',
+              900: '#0b1021',
+              850: '#101730',
+              800: '#162044',
+              700: '#233266',
+              cyan: '#00e5ff',
+              emerald: '#00f5a0',
+              amber: '#ffb300',
+              crimson: '#ff3366',
+            }
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'Consolas', 'monospace'],
+            sans: ['"Inter"', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="bg-space-950 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-space-cyan selection:text-black">
+
+  <!-- TOP FLIGHT OPS HEADER -->
+  <header class="border-b border-space-700/60 bg-space-900/90 backdrop-blur sticky top-0 z-50 px-4 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Brand & Mission Info -->
+      <div class="flex items-center space-x-3">
+        <div class="h-9 w-9 rounded-lg bg-gradient-to-br from-space-cyan to-blue-600 flex items-center justify-center shadow-lg shadow-space-cyan/20">
+          <i data-lucide="shield-plus" class="w-5 h-5 text-space-950 stroke-[2.5]"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-bold tracking-wider text-base text-white">BIOSENTINEL</span>
+            <span class="text-xs px-2 py-0.5 rounded bg-space-cyan/10 text-space-cyan border border-space-cyan/30 font-mono">AUTONOMOUS v2.4</span>
+          </div>
+          <p class="text-xs text-slate-400 font-mono">ARES-V • DEEP SPACE MARS TRANSIT • MET: <span id="mission-clock" class="text-space-cyan">DAY 184 14:32:08</span></p>
+        </div>
+      </div>
+
+      <!-- Autonomous Comms Delay & Earth Status Indicator -->
+      <div class="flex items-center space-x-4 text-xs font-mono">
+        <div class="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-md bg-space-850 border border-space-700/80">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+          </span>
+          <span class="text-slate-300">EARTH COMMS LATENCY:</span>
+          <span class="text-amber-400 font-bold">+14m 22s</span>
+        </div>
+
+        <div class="flex items-center space-x-2 px-3 py-1.5 rounded-md bg-emerald-950/40 border border-emerald-500/30 text-emerald-400">
+          <i data-lucide="cpu" class="w-4 h-4"></i>
+          <span class="font-bold">AUTONOMOUS CLINICAL MODE</span>
+        </div>
+
+        <button id="audio-toggle-btn" onclick="toggleAudioAlerts()" class="p-1.5 rounded bg-space-850 border border-space-700 text-slate-300 hover:text-white" title="Toggle Audio Chimes">
+          <i data-lucide="volume-2" id="audio-icon" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <nav class="bg-space-900 border-b border-space-800 px-4">
+    <div class="max-w-7xl mx-auto flex space-x-2 overflow-x-auto py-2">
+      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-tab active flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all">
+        <i data-lucide="activity" class="w-4 h-4"></i>
+        <span>Command HUD & Telemetry</span>
+      </button>
+      <button onclick="switchTab('diagnostics')" id="tab-diagnostics" class="nav-tab flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all">
+        <i data-lucide="eye" class="w-4 h-4"></i>
+        <span>Self-Assessments (SANS & PVT)</span>
+      </button>
+      <button onclick="switchTab('countermeasures')" id="tab-countermeasures" class="nav-tab flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all">
+        <i data-lucide="dumbbell" class="w-4 h-4"></i>
+        <span>Countermeasure Protocols</span>
+        <span id="badge-actions-count" class="ml-1.5 px-1.5 py-0.2 text-[10px] rounded-full bg-space-cyan/20 text-space-cyan border border-space-cyan/40">3</span>
+      </button>
+      <button onclick="switchTab('biomarkers')" id="tab-biomarkers" class="nav-tab flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all">
+        <i data-lucide="test-tube-2" class="w-4 h-4"></i>
+        <span>Biomarkers & Bone Health</span>
+      </button>
+      <button onclick="switchTab('simulator')" id="tab-simulator" class="nav-tab flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-amber-400/90 hover:text-amber-300 transition-all border border-amber-500/20 bg-amber-950/20">
+        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+        <span>Mission Crisis Simulator</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN VIEW CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 space-y-6">
+
+    <!-- ACTIVE CRITICAL ALERTS BANNER -->
+    <div id="critical-alert-banner" class="hidden rounded-xl border border-red-500/60 bg-red-950/50 p-4 backdrop-blur shadow-lg shadow-red-950/50 flex items-start space-x-3">
+      <div class="p-2 rounded-lg bg-red-500/20 text-red-400 shrink-0">
+        <i data-lucide="alert-octagon" class="w-6 h-6 animate-pulse"></i>
+      </div>
+      <div class="flex-1">
+        <div class="flex items-center justify-between">
+          <h4 class="font-bold text-red-200 text-sm tracking-wide uppercase font-mono" id="alert-title">CRITICAL SPACEFLIGHT HEALTH HAZARD</h4>
+          <span class="text-xs text-red-400 font-mono">AUTONOMOUS ACTION MANDATED</span>
+        </div>
+        <p class="text-xs text-red-200/90 mt-1" id="alert-desc">Solar particle event detected. Ambient radiation levels spiking.</p>
+        <div class="mt-2.5 flex items-center space-x-3">
+          <button onclick="switchTab('countermeasures')" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-semibold shadow">Execute Emergency Protocol</button>
+          <span class="text-[11px] text-red-300 font-mono">Earth Flight Surgeon notified (Latency: 14m 22s)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 1: COMMAND HUD & CREW TELEMETRY -->
+    <!-- ============================================================== -->
+    <section id="view-dashboard" class="space-y-6">
+      
+      <!-- Environmental & Cabin Life Support Bar -->
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div class="bg-space-900 border border-space-800 rounded-xl p-3">
+          <div class="text-[11px] text-slate-400 flex items-center justify-between">
+            <span>CABIN CO2</span>
+            <i data-lucide="wind" class="w-3.5 h-3.5 text-space-cyan"></i>
+          </div>
+          <div class="mt-1 flex items-baseline space-x-1.5">
+            <span id="env-co2" class="text-xl font-bold font-mono text-white">2.10</span>
+            <span class="text-xs text-slate-400">mmHg</span>
+          </div>
+          <span id="env-co2-status" class="inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 font-mono">NOMINAL (&lt;3.5)</span>
+        </div>
+
+        <div class="bg-space-900 border border-space-800 rounded-xl p-3">
+          <div class="text-[11px] text-slate-400 flex items-center justify-between">
+            <span>RADIATION FLUX</span>
+            <i data-lucide="radio" class="w-3.5 h-3.5 text-amber-400"></i>
+          </div>
+          <div class="mt-1 flex items-baseline space-x-1.5">
+            <span id="env-rad-rate" class="text-xl font-bold font-mono text-white">19.2</span>
+            <span class="text-xs text-slate-400">µGy/hr</span>
+          </div>
+          <span id="env-rad-status" class="inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 font-mono">GCR BACKGROUND</span>
+        </div>
+
+        <div class="bg-space-900 border border-space-800 rounded-xl p-3">
+          <div class="text-[11px] text-slate-400 flex items-center justify-between">
+            <span>MISSION DOSE</span>
+            <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-blue-400"></i>
+          </div>
+          <div class="mt-1 flex items-baseline space-x-1.5">
+            <span id="env-cum-dose" class="text-xl font-bold font-mono text-white">38.65</span>
+            <span class="text-xs text-slate-400">mSv</span>
+          </div>
+          <span class="inline-block mt-1 text-[10px] text-slate-400 font-mono">MAX: 600 mSv</span>
+        </div>
+
+        <div class="bg-space-900 border border-space-800 rounded-xl p-3">
+          <div class="text-[11px] text-slate-400 flex items-center justify-between">
+            <span>CABIN PRESSURE</span>
+            <i data-lucide="gauge" class="w-3.5 h-3.5 text-indigo-400"></i>
+          </div>
+          <div class="mt-1 flex items-baseline space-x-1.5">
+            <span id="env-pressure" class="text-xl font-bold font-mono text-white">14.65</span>
+            <span class="text-xs text-slate-400">psi</span>
+          </div>
+          <span class="inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 font-mono">1.0 ATM</span>
+        </div>
+
+        <div class="bg-space-900 border border-space-800 rounded-xl p-3">
+          <div class="text-[11px] text-slate-400 flex items-center justify-between">
+            <span>CABIN TEMP / O2</span>
+            <i data-lucide="thermometer" class="w-3.5 h-3.5 text-rose-400"></i>
+          </div>
+          <div class="mt-1 flex items-baseline space-x-1.5">
+            <span id="env-temp" class="text-xl font-bold font-mono text-white">22.4</span>
+            <span class="text-xs text-slate-400">°C / 21%</span>
+          </div>
+          <span class="inline-block mt-1 text-[10px] text-slate-400 font-mono">COMFORTABLE</span>
+        </div>
+
+        <div class="bg-space-900 border border-space-800 rounded-xl p-3">
+          <div class="text-[11px] text-slate-400 flex items-center justify-between">
+            <span>ACOUSTIC NOISE</span>
+            <i data-lucide="volume-1" class="w-3.5 h-3.5 text-teal-400"></i>
+          </div>
+          <div class="mt-1 flex items-baseline space-x-1.5">
+            <span id="env-noise" class="text-xl font-bold font-mono text-white">58.2</span>
+            <span class="text-xs text-slate-400">dB</span>
+          </div>
+          <span class="inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 font-mono">BELOW 62 dB CAP</span>
+        </div>
+      </div>
+
+      <!-- CREW ROSTER SELECTION STRIP -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider font-mono">EXPEDITION CREW ROSTER (SELECT ACTIVE ASTRONAUT)</h3>
+          <span class="text-xs text-slate-500 font-mono">Continuous Biometric Telemetry Live</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3" id="crew-cards-container">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- SELECTED ASTRONAUT DEEP DIVE -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left: Real-time Telemetry Charts (2 Cols) -->
+        <div class="lg:col-span-2 space-y-4">
+          <div class="bg-space-900 border border-space-800 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-space-cyan animate-pulse"></span>
+                <h4 class="font-bold text-sm text-white">REAL-TIME CARDIOVASCULAR TELEMETRY (HR & HRV)</h4>
+              </div>
+              <div class="flex items-center space-x-3 text-xs font-mono">
+                <span class="text-slate-400">HR: <b id="detail-hr" class="text-space-cyan">68</b> bpm</span>
+                <span class="text-slate-400">HRV (RMSSD): <b id="detail-hrv" class="text-space-emerald">48</b> ms</span>
+                <span class="text-slate-400">STRESS: <b id="detail-stress" class="text-amber-400">24</b>/100</span>
+              </div>
+            </div>
+            <div class="h-56 relative">
+              <canvas id="cardio-chart"></canvas>
+            </div>
+          </div>
+
+          <!-- Secondary Vitals & Blood Pressure -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="bg-space-900 border border-space-800 rounded-xl p-3">
+              <span class="text-[11px] text-slate-400">BLOOD PRESSURE</span>
+              <div class="mt-1 font-mono text-lg font-bold text-white"><span id="detail-bp">118/76</span> <span class="text-xs text-slate-400 font-sans">mmHg</span></div>
+              <span class="text-[10px] text-emerald-400 font-mono">MAP: 90 mmHg</span>
+            </div>
+            <div class="bg-space-900 border border-space-800 rounded-xl p-3">
+              <span class="text-[11px] text-slate-400">BLOOD OXYGEN (SpO2)</span>
+              <div class="mt-1 font-mono text-lg font-bold text-white"><span id="detail-spo2">98.2</span><span class="text-xs text-slate-400">%</span></div>
+              <span class="text-[10px] text-emerald-400 font-mono">OPTIMAL</span>
+            </div>
+            <div class="bg-space-900 border border-space-800 rounded-xl p-3">
+              <span class="text-[11px] text-slate-400">RESPIRATION RATE</span>
+              <div class="mt-1 font-mono text-lg font-bold text-white"><span id="detail-resp">14.5</span> <span class="text-xs text-slate-400 font-sans">br/m</span></div>
+              <span class="text-[10px] text-slate-400 font-mono">EUPNEA</span>
+            </div>
+            <div class="bg-space-900 border border-space-800 rounded-xl p-3">
+              <span class="text-[11px] text-slate-400">CORE TEMPERATURE</span>
+              <div class="mt-1 font-mono text-lg font-bold text-white"><span id="detail-temp">36.8</span><span class="text-xs text-slate-400">°C</span></div>
+              <span class="text-[10px] text-slate-400 font-mono">CIRCADIAN PHASE 2</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: 5 Hazards Radar / Scorecard (1 Col) -->
+        <div class="bg-space-900 border border-space-800 rounded-xl p-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-space-800">
+              <div>
+                <h4 class="font-bold text-sm text-white flex items-center space-x-2">
+                  <i data-lucide="shield" class="w-4 h-4 text-space-cyan"></i>
+                  <span>5-HAZARD RISK EVALUATION</span>
+                </h4>
+                <p class="text-[11px] text-slate-400 font-mono">NASA Human Research Program Matrix</p>
+              </div>
+              <div class="text-right">
+                <span class="text-xs text-slate-400">HEALTH SCORE</span>
+                <div id="overall-health-badge" class="font-mono text-2xl font-black text-space-emerald">94.0</div>
+              </div>
+            </div>
+
+            <!-- Hazard Breakdown Bars -->
+            <div class="mt-4 space-y-3" id="hazard-bars-container">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Autonomous Decision Engine Diagnostic Summary -->
+          <div class="mt-4 pt-3 border-t border-space-800">
+            <span class="text-[11px] text-slate-400 font-mono uppercase tracking-wider">AUTONOMOUS CLINICAL FINDINGS:</span>
+            <ul id="clinical-findings-list" class="mt-1 text-xs text-slate-300 space-y-1 font-mono">
+              <li class="text-emerald-400">• All biometrics tracking within nominal spaceflight baseline.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- TAB 2: SELF-ASSESSMENTS (SANS OCULAR & PVT COGNITIVE) -->
+    <!-- ============================================================== -->
+    <section id="view-diagnostics" class="hidden space-y-6">
+      <div class="bg-space-900 border border-space-800 rounded-xl p-4">
+        <h3 class="text-base font-bold text-white flex items-center space-x-2">
+          <i data-lucide="clipboard-check" class="w-5 h-5 text-space-cyan"></i>
+          <span>ASTRONAUT SELF-EVALUATION SUITE</span>
+        </h3>
+        <p class="text-xs text-slate-400 mt-1">
+          In deep space, astronauts carry autonomous responsibility for detecting subtle neuro-ocular (SANS) and cognitive fatigue changes.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- PVT (Psychomotor Vigilance Task) Module -->
+        <div class="bg-space-900 border border-space-800 rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-space-800">
+              <div>
+                <h4 class="font-bold text-sm text-white flex items-center space-x-2">
+                  <i data-lucide="timer" class="w-4 h-4 text-amber-400"></i>
+                  <span>PSYCHOMOTOR VIGILANCE TASK (PVT)</span>
+                </h4>
+                <p class="text-xs text-slate-400">NASA 60-Second Reaction Time & Attentional Lapse Test</p>
+              </div>
+              <span id="pvt-status-pill" class="text-xs px-2 py-0.5 rounded bg-space-850 text-slate-300 font-mono">READY</span>
+            </div>
+
+            <!-- PVT Test Arena -->
+            <div class="mt-4 bg-space-950 border border-space-800 rounded-xl h-48 flex flex-col items-center justify-center relative overflow-hidden select-none" id="pvt-arena" onclick="handlePVTInteraction()">
+              <div id="pvt-idle-screen" class="text-center p-4">
+                <i data-lucide="mouse-pointer" class="w-8 h-8 text-space-cyan mx-auto mb-2 opacity-80"></i>
+                <p class="text-sm text-slate-200 font-medium">Click "Start Test" Below</p>
+                <p class="text-xs text-slate-400 mt-1">When the red millisecond counter starts, click or press SPACE as fast as possible!</p>
+              </div>
+
+              <div id="pvt-active-screen" class="hidden text-center">
+                <div id="pvt-timer-display" class="font-mono text-5xl font-black text-rose-500 tracking-wider">000</div>
+                <p class="text-xs text-slate-400 mt-2 font-mono">CLICK ANYWHERE OR PRESS SPACEBAR NOW!</p>
+              </div>
+
+              <div id="pvt-waiting-screen" class="hidden text-center">
+                <div class="w-4 h-4 rounded-full bg-slate-700 animate-ping mx-auto mb-2"></div>
+                <p class="text-xs font-mono text-slate-400 uppercase tracking-widest">AWAITING STIMULUS...</p>
+              </div>
+            </div>
+
+            <!-- PVT Controls & Live Metrics -->
+            <div class="mt-4 flex items-center justify-between">
+              <button id="pvt-start-btn" onclick="startPVTTest()" class="px-4 py-2 bg-space-cyan text-space-950 font-bold rounded-lg text-xs hover:bg-cyan-300 transition shadow-lg shadow-space-cyan/20">
+                START 60s PVT TEST
+              </button>
+              <div class="flex items-center space-x-4 text-xs font-mono">
+                <span>STIMULI: <b id="pvt-stimuli-count" class="text-white">0/8</b></span>
+                <span>LAPSES (&gt;500ms): <b id="pvt-lapse-count" class="text-emerald-400">0</b></span>
+                <span>FALSE STARTS: <b id="pvt-false-starts" class="text-slate-400">0</b></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PVT Results Output -->
+          <div class="mt-4 pt-3 border-t border-space-800 text-xs font-mono">
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="bg-space-850 p-2 rounded">
+                <span class="text-slate-400 block text-[10px]">MEAN RT</span>
+                <span id="pvt-mean-rt" class="text-white font-bold text-sm">-- ms</span>
+              </div>
+              <div class="bg-space-850 p-2 rounded">
+                <span class="text-slate-400 block text-[10px]">READINESS SCORE</span>
+                <span id="pvt-readiness" class="text-space-emerald font-bold text-sm">--%</span>
+              </div>
+              <div class="bg-space-850 p-2 rounded">
+                <span class="text-slate-400 block text-[10px]">FATIGUE LEVEL</span>
+                <span id="pvt-fatigue" class="text-slate-300 font-bold text-sm">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SANS (Spaceflight-Associated Neuro-ocular Syndrome) Module -->
+        <div class="bg-space-900 border border-space-800 rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-space-800">
+              <div>
+                <h4 class="font-bold text-sm text-white flex items-center space-x-2">
+                  <i data-lucide="eye" class="w-4 h-4 text-space-cyan"></i>
+                  <span>SANS OCULAR & AMSLER GRID SELF-EXAM</span>
+                </h4>
+                <p class="text-xs text-slate-400">Screen for Cephalad Fluid Shift, Papilledema & Globe Flattening</p>
+              </div>
+              <span id="sans-risk-pill" class="text-xs px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-mono">STAGE 0: NORMAL</span>
+            </div>
+
+            <!-- Amsler Grid Distortion Canvas -->
+            <div class="mt-4 bg-space-950 border border-space-800 rounded-xl p-4 flex flex-col items-center justify-center">
+              <span class="text-[11px] text-slate-400 mb-2 font-mono">AMSLER GRID: FOCUS ON WHITE CENTER DOT. CLICK ANY WARPED / WAVY REGIONS:</span>
+              <div class="relative">
+                <canvas id="amsler-canvas" width="220" height="220" class="border border-slate-700 cursor-crosshair rounded bg-black" onclick="handleAmslerClick(event)"></canvas>
+                <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+                  <div class="w-2.5 h-2.5 rounded-full bg-white shadow-lg shadow-white"></div>
+                </div>
+              </div>
+              <div class="mt-2 text-[10px] text-slate-400 flex items-center space-x-4">
+                <span id="amsler-distortion-flag" class="text-emerald-400">Grid Lines: Straight & Uniform</span>
+                <button onclick="resetAmslerGrid()" class="text-space-cyan underline hover:text-cyan-300">Reset Grid</button>
+              </div>
+            </div>
+
+            <!-- Symptom & Visual Acuity Inputs -->
+            <div class="mt-4 grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <label class="text-slate-400 block mb-1">Near-Point Visual Acuity</label>
+                <select id="sans-acuity-select" class="w-full bg-space-850 border border-space-700 rounded px-2.5 py-1.5 text-white font-mono text-xs">
+                  <option value="20/20">20/20 (Nominal)</option>
+                  <option value="20/25">20/25 (Mild Hyperopic Shift)</option>
+                  <option value="20/40">20/40 (Moderate Blurring)</option>
+                  <option value="20/60">20/60 (Severe Globe Flattening)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="text-slate-400 block mb-1">Subjective Headache / Eye Pressure</label>
+                <select id="sans-headache-select" class="w-full bg-space-850 border border-space-700 rounded px-2.5 py-1.5 text-white font-mono text-xs">
+                  <option value="0">0 - None (Nominal)</option>
+                  <option value="2">2 - Mild Periorbital Fullness</option>
+                  <option value="5">5 - Moderate Cephalad Headache</option>
+                  <option value="8">8 - Severe Throbbing Headache</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit SANS Exam -->
+          <div class="mt-4 pt-3 border-t border-space-800 flex items-center justify-between">
+            <span class="text-xs text-slate-400 font-mono">Tonal IOP Estimate: <b id="est-iop" class="text-white">16.8 mmHg</b></span>
+            <button onclick="submitSANSExam()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-xs shadow transition">
+              SAVE & ANALYZE SANS EXAM
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- TAB 3: AUTONOMOUS COUNTERMEASURE PROTOCOLS -->
+    <!-- ============================================================== -->
+    <section id="view-countermeasures" class="hidden space-y-6">
+      <div class="bg-space-900 border border-space-800 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center space-x-2">
+            <i data-lucide="clipboard-list" class="w-5 h-5 text-space-emerald"></i>
+            <span>CLINICAL COUNTERMEASURE SUITE</span>
+          </h3>
+          <p class="text-xs text-slate-400 mt-1">
+            Autonomous actionable countermeasures generated by BioSentinel to proactively reverse physiological degradation.
+          </p>
+        </div>
+        <button onclick="regenerateCountermeasures()" class="px-4 py-2 bg-space-850 border border-space-700 hover:border-space-cyan text-space-cyan rounded-lg text-xs font-mono flex items-center space-x-2 transition">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+          <span>RE-EVALUATE PROTOCOLS</span>
+        </button>
+      </div>
+
+      <!-- Active Plan Summary Box -->
+      <div class="bg-gradient-to-r from-space-900 via-space-850 to-space-900 border border-space-700 rounded-xl p-4">
+        <div class="flex items-center justify-between pb-2 border-b border-space-800">
+          <span class="text-xs text-slate-400 font-mono">ACTIVE PROTOCOL SET FOR: <b id="plan-astro-name" class="text-white font-bold">DR. SARAH VANCE</b></span>
+          <span id="plan-severity-badge" class="px-2 py-0.5 rounded text-xs font-mono bg-emerald-950 text-emerald-400 border border-emerald-500/30">NOMINAL PROTOCOL</span>
+        </div>
+        <p id="plan-summary-text" class="text-xs text-slate-300 mt-2 font-mono">
+          Maintaining baseline musculoskeletal loading and circadian alignment. Complete daily checklists below.
+        </p>
+      </div>
+
+      <!-- Action Items Checklist Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="action-items-container">
+        <!-- Action items populated dynamically -->
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- TAB 4: BIOMARKERS & BONE HEALTH -->
+    <!-- ============================================================== -->
+    <section id="view-biomarkers" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left: Daily Lab Logging Form (1 Col) -->
+        <div class="bg-space-900 border border-space-800 rounded-xl p-5">
+          <h4 class="font-bold text-sm text-white flex items-center space-x-2 pb-3 border-b border-space-800">
+            <i data-lucide="test-tubes" class="w-4 h-4 text-purple-400"></i>
+            <span>DAILY LAB & BIOMARKER LOG</span>
+          </h4>
+          
+          <form id="biomarker-form" onsubmit="submitBiomarkers(event)" class="mt-4 space-y-4 text-xs">
+            <div>
+              <div class="flex justify-between text-slate-400 mb-1">
+                <span>Hydration (Urine Specific Gravity)</span>
+                <span id="val-hydration" class="font-mono text-white">1.018</span>
+              </div>
+              <input type="range" min="1.005" max="1.035" step="0.001" value="1.018" id="input-hydration" class="w-full accent-space-cyan" oninput="document.getElementById('val-hydration').innerText = this.value">
+              <span class="text-[10px] text-slate-500 font-mono">Nominal: 1.010 - 1.020 (Dehydrated &gt; 1.025)</span>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-slate-400 mb-1">
+                <span>Urinary NTx (Bone Resorption Rate)</span>
+                <span id="val-ntx" class="font-mono text-white">45.0</span>
+              </div>
+              <input type="range" min="15" max="120" step="1" value="45" id="input-ntx" class="w-full accent-purple-400" oninput="document.getElementById('val-ntx').innerText = this.value">
+              <span class="text-[10px] text-slate-500 font-mono">nmol BCE/mmol Cr (&gt;65 indicates accelerated bone loss)</span>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-slate-400 mb-1">
+                <span>Last Sleep Duration (Hours)</span>
+                <span id="val-sleep" class="font-mono text-white">7.2</span>
+              </div>
+              <input type="range" min="3.0" max="10.0" step="0.1" value="7.2" id="input-sleep" class="w-full accent-blue-400" oninput="document.getElementById('val-sleep').innerText = this.value">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-slate-400 mb-1">
+                <span>Muscle Soreness / Atrophy Rating</span>
+                <span id="val-soreness" class="font-mono text-white">2/10</span>
+              </div>
+              <input type="range" min="0" max="10" step="1" value="2" id="input-soreness" class="w-full accent-amber-400" oninput="document.getElementById('val-soreness').innerText = this.value + '/10'">
+            </div>
+
+            <button type="submit" class="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg text-xs shadow transition">
+              LOG BIOMARKER RECORD
+            </button>
+          </form>
+        </div>
+
+        <!-- Right: Bone Mineral Density & Radiation Trajectory (2 Cols) -->
+        <div class="lg:col-span-2 space-y-4">
+          <div class="bg-space-900 border border-space-800 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-bold text-sm text-white flex items-center space-x-2">
+                <i data-lucide="bone" class="w-4 h-4 text-emerald-400"></i>
+                <span>PROJECTED BONE MINERAL DENSITY (BMD) LOSS</span>
+              </h4>
+              <span class="text-xs text-slate-400 font-mono">Trabecular Remodeling Model</span>
+            </div>
+            <div class="h-48 relative">
+              <canvas id="bmd-chart"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-space-900 border border-space-800 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-bold text-sm text-white flex items-center space-x-2">
+                <i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i>
+                <span>CAREER CUMULATIVE RADIATION ACCUMULATION</span>
+              </h4>
+              <span class="text-xs text-amber-400 font-mono">NASA Career Cap: 600 mSv</span>
+            </div>
+            <div class="h-44 relative">
+              <canvas id="radiation-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- TAB 5: MISSION CRISIS SIMULATOR -->
+    <!-- ============================================================== -->
+    <section id="view-simulator" class="hidden space-y-6">
+      <div class="bg-gradient-to-r from-amber-950/40 via-space-900 to-space-900 border border-amber-500/30 rounded-xl p-5">
+        <div class="flex items-start space-x-3">
+          <i data-lucide="radiation" class="w-6 h-6 text-amber-400 shrink-0 mt-0.5"></i>
+          <div>
+            <h3 class="text-base font-bold text-white">AUTONOMOUS MISSION CRISIS & ANOMALY INJECTOR</h3>
+            <p class="text-xs text-slate-300 mt-1">
+              Test how BioSentinel detects, scores, and counteracts real deep-space emergencies in seconds without ground communication.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        
+        <!-- Scenario 1: Solar Storm -->
+        <div class="bg-space-900 border border-space-800 hover:border-red-500/60 transition rounded-xl p-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-xs font-mono">
+              <span class="px-2 py-0.5 rounded bg-red-950 text-red-400 border border-red-500/30">HAZARD: RADIATION</span>
+              <span class="text-slate-500">SEV-1</span>
+            </div>
+            <h4 class="font-bold text-sm text-white mt-2">Solar Particle Event (SPE) Radiation Storm</h4>
+            <p class="text-xs text-slate-400 mt-1">
+              Coronal Mass Ejection impacts spacecraft. Radiation dose rate spikes from 19 to 340+ µGy/hr. Triggers autonomous storm-shelter lockdown and radioprotectant prescriptions.
+            </p>
+          </div>
+          <button onclick="triggerCrisis('SOLAR_PARTICLE_EVENT')" class="mt-4 w-full py-2 bg-red-900/60 hover:bg-red-800 text-red-200 border border-red-600/40 rounded-lg text-xs font-mono font-bold transition">
+            INJECT SOLAR STORM CRISIS
+          </button>
+        </div>
+
+        <!-- Scenario 2: CO2 Scrubber Failure -->
+        <div class="bg-space-900 border border-space-800 hover:border-amber-500/60 transition rounded-xl p-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-xs font-mono">
+              <span class="px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-500/30">HAZARD: CLOSED CABIN</span>
+              <span class="text-slate-500">SEV-2</span>
+            </div>
+            <h4 class="font-bold text-sm text-white mt-2">ECLSS CO2 Scrubber Bed Malfunction</h4>
+            <p class="text-xs text-slate-400 mt-1">
+              Cabin CO2 creeps past 3.8 mmHg. Crew displays elevated resting HR, hypercapnic headache, and tachypnea. Triggers scrubber canister swap protocol.
+            </p>
+          </div>
+          <button onclick="triggerCrisis('CO2_SCRUBBER_MALFUNCTION')" class="mt-4 w-full py-2 bg-amber-900/60 hover:bg-amber-800 text-amber-200 border border-amber-600/40 rounded-lg text-xs font-mono font-bold transition">
+            INJECT CO2 SCRUBBER CRISIS
+          </button>
+        </div>
+
+        <!-- Scenario 3: SANS Acute Ocular Shift -->
+        <div class="bg-space-900 border border-space-800 hover:border-indigo-500/60 transition rounded-xl p-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-xs font-mono">
+              <span class="px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-500/30">HAZARD: ALTERED GRAVITY</span>
+              <span class="text-slate-500">SEV-2</span>
+            </div>
+            <h4 class="font-bold text-sm text-white mt-2">Acute SANS Cephalad Pressure Spike</h4>
+            <p class="text-xs text-slate-400 mt-1">
+              Microgravity fluid shift triggers choroidal folds and intraocular hypertension in Payload Specialist Maya Lin. Prescribes immediate LBNP decompression sessions.
+            </p>
+          </div>
+          <button onclick="triggerCrisis('SANS_OCULAR_CRISIS')" class="mt-4 w-full py-2 bg-indigo-900/60 hover:bg-indigo-800 text-indigo-200 border border-indigo-600/40 rounded-lg text-xs font-mono font-bold transition">
+            INJECT SANS OCULAR CRISIS
+          </button>
+        </div>
+
+        <!-- Scenario 4: Cognitive Burnout -->
+        <div class="bg-space-900 border border-space-800 hover:border-purple-500/60 transition rounded-xl p-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-xs font-mono">
+              <span class="px-2 py-0.5 rounded bg-purple-950 text-purple-400 border border-purple-500/30">HAZARD: ISOLATION</span>
+              <span class="text-slate-500">SEV-3</span>
+            </div>
+            <h4 class="font-bold text-sm text-white mt-2">Circadian Desynchronization & Fatigue</h4>
+            <p class="text-xs text-slate-400 mt-1">
+              Severe sleep debt collapses HRV (RMSSD &lt; 18ms), causing frequent PVT attentional lapses. Triggers 480nm blue light therapy and workload dampening.
+            </p>
+          </div>
+          <button onclick="triggerCrisis('FATIGUE_EXHAUSTION')" class="mt-4 w-full py-2 bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-600/40 rounded-lg text-xs font-mono font-bold transition">
+            INJECT FATIGUE & SLEEP LOSS
+          </button>
+        </div>
+
+        <!-- Scenario 5: Cardiac Tachyarrhythmia -->
+        <div class="bg-space-900 border border-space-800 hover:border-rose-500/60 transition rounded-xl p-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-xs font-mono">
+              <span class="px-2 py-0.5 rounded bg-rose-950 text-rose-400 border border-rose-500/30">HAZARD: CARDIOVASCULAR</span>
+              <span class="text-slate-500">SEV-2</span>
+            </div>
+            <h4 class="font-bold text-sm text-white mt-2">Orthostatic Deconditioning & Tachycardia</h4>
+            <p class="text-xs text-slate-400 mt-1">
+              Resting heart rate leaps to 118 bpm with autonomic dysregulation. Triggers plasma expansion salt loading and T2 interval conditioning.
+            </p>
+          </div>
+          <button onclick="triggerCrisis('CARDIAC_ARRHYTHMIA_RISK')" class="mt-4 w-full py-2 bg-rose-900/60 hover:bg-rose-800 text-rose-200 border border-rose-600/40 rounded-lg text-xs font-mono font-bold transition">
+            INJECT CARDIAC ANOMALY
+          </button>
+        </div>
+
+        <!-- Scenario Reset: Nominal Operations -->
+        <div class="bg-space-900 border border-emerald-500/40 rounded-xl p-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-xs font-mono">
+              <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/30">STATUS: NOMINAL</span>
+              <span class="text-slate-500">RESTORE</span>
+            </div>
+            <h4 class="font-bold text-sm text-white mt-2">Reset to Nominal Mission Flight Status</h4>
+            <p class="text-xs text-slate-400 mt-1">
+              Clears all injected anomalies, restores nominal ECLSS atmospheric conditions, and normalizes crew physiological baselines.
+            </p>
+          </div>
+          <button onclick="triggerCrisis('NORMAL')" class="mt-4 w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-space-950 rounded-lg text-xs font-mono font-bold transition shadow-lg shadow-emerald-500/20">
+            RESTORE NOMINAL STATUS
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-space-800 bg-space-900/60 px-4 py-3 text-xs text-slate-500 font-mono">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2">
+      <div class="flex items-center space-x-2">
+        <span>NASA Human Research Program (HRP) Compliant</span>
+        <span>•</span>
+        <span>TRL 7 Deep Space Architecture</span>
+      </div>
+      <div>
+        <span>Autonomous Edge System • Zero Earth Telemetry Required</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="/static/js/pvt_test.js"></script>
+  <script src="/static/js/ocular_test.js"></script>
+  <script src="/static/js/app.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>

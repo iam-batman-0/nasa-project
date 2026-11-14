@@ -25,7 +25,8 @@ build/
 dist/
 *.egg-info/
 
-# Logs & temp files
-*.log
-tmp/
-.temp/
+# Database files
+*.db
+*.sqlite3
+data/
+
